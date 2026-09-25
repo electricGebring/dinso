@@ -3,12 +3,17 @@ export type Role =
   | 'COMPANY_ADMIN'
   | 'COMPANY_VIEWER'
   | 'SYSTEM_ADMIN'
+export type Permission =
+  | 'VIEW_CASES'
+  | 'APPROVE_CASES'
+  | 'MANAGE_EMPLOYEES'
 export type Portal = 'PRIVATE' | 'COMPANY' | 'SYSTEM'
 export type ProfilePortal = Portal
 export interface Profile {
   id: string
   name: string
   role: Role
+  permissions: Permission[]
   portal: ProfilePortal
   portals?: Portal[]
   description: string

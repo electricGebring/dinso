@@ -83,7 +83,12 @@ export const useDemoSessionStore = defineStore('demo-session', () => {
       profile.value?.role === 'COMPANY_ADMIN' ||
       profile.value?.role === 'SYSTEM_ADMIN',
   )
-  const canApproveCases = computed<boolean>(() => canManageCompany.value)
+  const canViewCases = computed<boolean>(() =>
+    profile.value?.permissions.includes('VIEW_CASES') ?? false,
+  )
+  const canApproveCases = computed<boolean>(() =>
+    profile.value?.permissions.includes('APPROVE_CASES') ?? false,
+  )
   const availableCompanies = computed<Company[]>(() =>
     companies.value.length > 0
       ? companies.value
@@ -150,6 +155,7 @@ export const useDemoSessionStore = defineStore('demo-session', () => {
     activePortal,
     isCompany,
     canManageCompany,
+    canViewCases,
     canApproveCases,
     availableCompanies,
     selectedCompanyName,

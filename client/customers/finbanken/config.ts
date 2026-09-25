@@ -10,6 +10,7 @@ const config: Customer = {
       id: 'finbanken-portfolio',
       name: 'Elin Berg',
       role: 'PRIVATE_CUSTOMER',
+      permissions: [],
       portal: 'PRIVATE',
       description: 'Fund-focused portfolio with investment and risk coverage.',
       preview: '2 insurance policies · documents and transactions',
@@ -18,6 +19,7 @@ const config: Customer = {
       id: 'finbanken-payment',
       name: 'Oscar Lind Aknar',
       role: 'PRIVATE_CUSTOMER',
+      permissions: [],
       portal: 'PRIVATE',
       description: 'Insurance and upcoming pension payments.',
       preview: '2 insurance policies · 2 payments',
@@ -26,6 +28,7 @@ const config: Customer = {
       id: 'finbanken-system-admin',
       name: 'Alex Lund',
       role: 'SYSTEM_ADMIN',
+      permissions: [],
       portal: 'SYSTEM',
       description:
         'System administrator with an overview of company administrators.',

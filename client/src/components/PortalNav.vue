@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ items: [string, string][]; active: string }>()
+defineProps<{ items: [string, string, boolean?][]; active: string }>()
 defineEmits<{ select: [string] }>()
 </script>
 
@@ -11,7 +11,9 @@ defineEmits<{ select: [string] }>()
       type="button"
       class="portal-nav__item"
       :class="{ 'is-active': active === item[0] }"
-      @click="$emit('select', item[0])"
+      :disabled="item[2]"
+      :aria-disabled="item[2]"
+      @click="!item[2] && $emit('select', item[0])"
     >
       {{ item[1] }}
     </button>
@@ -50,6 +52,16 @@ defineEmits<{ select: [string] }>()
 
 .portal-nav__item:hover {
   color: var(--ink);
+}
+
+.portal-nav__item:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.portal-nav__item:disabled:hover {
+  color: var(--muted);
 }
 
 .portal-nav__item.is-active {

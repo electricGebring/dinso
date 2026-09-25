@@ -119,7 +119,7 @@ const portalLabel = computed(() =>
 const companies = computed(() =>
   session.isCompany ? session.availableCompanies : [],
 )
-const nav = computed<[string, string][]>(() =>
+const nav = computed<[string, string, boolean?][]>(() =>
   session.activePortal === 'SYSTEM'
     ? [['overview', labels.value.overview]]
     : session.isCompany
@@ -127,7 +127,7 @@ const nav = computed<[string, string][]>(() =>
           ['overview', labels.value.overview],
           ['employees', labels.value.employees],
           ['plans', labels.value.plans],
-          ['cases', labels.value.cases],
+          ['cases', labels.value.cases, !session.canViewCases],
           ['documents', labels.value.documents],
         ]
       : [
@@ -219,6 +219,7 @@ watch(
     if (
       !portal ||
       !allowedPortals.includes(portal) ||
+      (route.name === 'company-cases' && !session.canViewCases) ||
       (route.meta.roles &&
         !route.meta.roles.includes(profile.role) &&
         profile.role !== 'SYSTEM_ADMIN')
