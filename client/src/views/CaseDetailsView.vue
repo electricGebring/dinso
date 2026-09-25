@@ -78,4 +78,11 @@ onMounted(() => {
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel, none);
 }
+
+@media (max-width: 520px) {
+  .case-details-page {
+    margin: 12px;
+    padding: 16px;
+  }
+}
 </style>

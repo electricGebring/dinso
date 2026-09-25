@@ -108,6 +108,17 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   font-size: 1rem;
 }
 
+@media (max-width: 520px) {
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .case-modal {
+    max-height: calc(100vh - 24px);
+    padding: 20px;
+  }
+}
+
 .icon-button {
   width: 44px;
   min-height: 44px;

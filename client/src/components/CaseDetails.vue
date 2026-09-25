@@ -192,6 +192,15 @@ const isApproved = (status: string): boolean =>
 }
 
 @media (max-width: 520px) {
+  .case-details h1 {
+    max-width: calc(100vw - 112px);
+    font-size: 1.3rem;
+  }
+
+  .case-details__summary {
+    grid-template-columns: 1fr;
+  }
+
   .case-details__actions {
     flex-direction: column-reverse;
   }

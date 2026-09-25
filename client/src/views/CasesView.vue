@@ -20,6 +20,7 @@ const emit = defineEmits<{ open: [item: Case] }>()
 const searchQuery = ref('')
 const selectedStatuses = ref<string[]>([])
 const selectedDueStatuses = ref<string[]>([])
+const filtersExpanded = ref(false)
 const openCase = (item: Case): void => {
   if (customer.key === 'svenskebanken') {
     void router.push({
@@ -131,12 +132,34 @@ const columns = computed<DataTableColumn[]>(() => [
     <PageHeader
       class="cases-page-header"
       :title="`${title} banan`"
-      :description="
-        t('Klicka på ett ärende för att se detaljer och godkänna det.')
-      "
     />
+    <div class="cases-search">
+      <div class="cases-search__header">
+        <label class="cases-search__label" for="case-search">
+          {{ t('Sök ärenden') }}
+        </label>
+        <span
+          v-if="searchQuery.trim()"
+          class="cases-search__count"
+          aria-live="polite"
+        >
+          {{ filteredCases.length }}
+          {{ t(filteredCases.length === 1 ? 'träff' : 'träffar') }}
+        </span>
+      </div>
+      <input
+        id="case-search"
+        class="cases-search__input"
+        type="search"
+        v-model="searchQuery"
+        :placeholder="t('Sök på ärende eller person')"
+      />
+    </div>
     <div class="cases-layout">
       <div>
+        <p class="cases-page-description">
+          {{ t('Klicka på ett ärende för att se detaljer och godkänna det.') }}
+        </p>
         <Panel>
           <DataTable
             v-if="filteredCases.length > 0"
@@ -192,31 +215,66 @@ const columns = computed<DataTableColumn[]>(() => [
       </div>
 
       <div class="cases-sidebar">
-        <div class="cases-search">
-          <div class="cases-search__header">
-            <label class="cases-search__label" for="case-search">
-              {{ t('Sök ärenden') }}
-            </label>
-            <span
-              v-if="searchQuery.trim()"
-              class="cases-search__count"
-              aria-live="polite"
+        <Panel class="cases-filter-panel">
+          <div
+            class="cases-filter__header"
+            :class="{ 'is-expanded': filtersExpanded }"
+          >
+            <h2>{{ t('Filter') }}</h2>
+            <button
+              class="cases-filter__toggle"
+              type="button"
+              :aria-expanded="filtersExpanded"
+              :aria-controls="'case-filters'"
+              @click="filtersExpanded = !filtersExpanded"
             >
-              {{ filteredCases.length }}
-              {{ t(filteredCases.length === 1 ? 'träff' : 'träffar') }}
+              <span>{{ t('Filter') }}</span>
+            </button>
+            <span class="cases-filter__count">
+              {{ activeFilterCount }}
+              {{ t(activeFilterCount === 1 ? 'filter används' : 'filter används') }}
             </span>
+            <button
+              class="cases-filter__mobile-clear"
+              type="button"
+              :disabled="activeFilterCount === 0"
+              @click="selectedStatuses = []; selectedDueStatuses = []"
+            >
+              <svg
+                class="cases-filter__clear-icon"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M13 5a5 5 0 1 0 1 3" />
+                <path d="M13 1v4H9" />
+              </svg>
+              {{ t('Rensa filter') }}
+            </button>
+            <button
+              class="cases-filter__chevron-button"
+              type="button"
+              :aria-label="t('Filter')"
+              :aria-expanded="filtersExpanded"
+              :aria-controls="'case-filters'"
+              @click="filtersExpanded = !filtersExpanded"
+            >
+              <svg
+                class="cases-filter__chevron"
+                :class="{ 'is-expanded': filtersExpanded }"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="m3 6 5 5 5-5" />
+              </svg>
+            </button>
           </div>
-          <input
-            id="case-search"
-            class="cases-search__input"
-            type="search"
-            v-model="searchQuery"
-            :placeholder="t('Sök på ärende eller person')"
-          />
-        </div>
-
-        <Panel title="Filter">
-          <div class="cases-filter">
+          <div
+            id="case-filters"
+            class="cases-filter"
+            :class="{ 'is-collapsed': !filtersExpanded }"
+          >
           <div class="cases-filter__heading">
             <span>{{ activeFilterCount }} {{ t(activeFilterCount === 1 ? 'filter används' : 'filter används') }}</span>
             <button
@@ -277,7 +335,7 @@ const columns = computed<DataTableColumn[]>(() => [
 }
 
 .cases-search {
-  width: 100%;
+  width: 40%;
   margin-bottom: 24px;
 }
 
@@ -324,6 +382,13 @@ const columns = computed<DataTableColumn[]>(() => [
   border-color: var(--primary);
 }
 
+.cases-page-description {
+  margin: 0 0 14px;
+  line-height: 1.4;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .cases-sort-button {
   display: inline-flex;
   align-items: center;
@@ -360,11 +425,38 @@ const columns = computed<DataTableColumn[]>(() => [
 
 .cases-sidebar {
   min-width: 0;
+  padding-top: 34px;
+}
+
+.cases-filter-panel {
+  padding: 18px;
+}
+
+.cases-filter__header {
+  margin-bottom: 12px;
+}
+
+.cases-filter__header h2 {
+  margin: 0;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: 1.15rem;
+}
+
+.cases-filter__header > .cases-filter__count {
+  display: none;
+}
+
+.cases-filter__toggle {
+  display: none;
 }
 
 .cases-filter {
   display: grid;
-  gap: 12px;
+  gap: 6px;
+}
+
+.cases-filter.is-collapsed {
+  display: grid;
 }
 
 .cases-filter__heading {
@@ -372,7 +464,7 @@ const columns = computed<DataTableColumn[]>(() => [
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.9rem;
@@ -420,19 +512,24 @@ const columns = computed<DataTableColumn[]>(() => [
 .cases-filter__sort input {
   width: 18px;
   height: 18px;
+  min-height: 32px;
   accent-color: var(--primary);
 }
 
 .cases-filter__group {
   display: grid;
-  gap: 6px;
-  margin: 4px 0 0;
+  gap: 1.5px;
+  margin: 0;
   padding: 0;
   border: 0;
 }
 
+.cases-filter__group:first-of-type {
+  margin-top: 10px;
+}
+
 .cases-filter__group legend {
-  margin-bottom: 8px;
+  margin-bottom: 3px;
   color: var(--ink);
   font-size: 0.95rem;
   font-weight: 700;
@@ -458,10 +555,187 @@ const columns = computed<DataTableColumn[]>(() => [
 @media (max-width: 760px) {
   .cases-search {
     width: 100%;
+    margin-bottom: 16px;
   }
 
   .cases-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cases-sidebar {
+    order: -1;
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .cases-layout > div:first-child {
+    width: 100%;
+  }
+
+  .cases-page-description {
+    margin-bottom: 12px;
+  }
+
+  .cases-filter__header {
+    display: grid;
+    grid-template-columns: max-content max-content max-content 44px;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom: 0;
+  }
+
+  .cases-filter__header.is-expanded {
+    grid-template-columns: 1fr 1fr 1fr 44px;
+    justify-content: initial;
+  }
+
+  .cases-filter__header h2 {
+    display: none;
+  }
+
+  .cases-filter__header > .cases-filter__count {
+    display: inline-block;
+    justify-self: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .cases-filter__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    justify-self: start;
+    width: auto;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cases-filter__chevron-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .cases-filter-panel {
+    padding: 8px 16px;
+  }
+
+  .cases-filter__mobile-clear {
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--primary);
+    font: inherit;
+    font-size: 0.85rem;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .cases-filter__mobile-clear:disabled {
+    color: var(--muted);
+    cursor: default;
+    opacity: 0.6;
+    /* display: grid;
+    grid-template-columns: 1fr 3fr; */
+  }
+
+  .cases-filter__heading {
+    display: none;
+  }
+
+  .cases-filter__chevron {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    transition: transform 160ms ease;
+  }
+
+  .cases-filter__chevron.is-expanded {
+    transform: rotate(180deg);
+  }
+
+  .cases-filter.is-collapsed {
+    display: none;
+  }
+
+  .cases-filter:not(.is-collapsed) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+    row-gap: 0;
+    gap: 0 20px;
+    margin-top: 0;
+    padding-inline: 0;
+  }
+
+  .cases-filter:not(.is-collapsed) .cases-filter__heading {
+    grid-column: 1 / -1;
+  }
+
+  .cases-filter:not(.is-collapsed) .cases-filter__group {
+    align-content: start;
+    gap: 4px;
+    margin-inline: 0;
+    margin-top: 0;
+    padding-inline: 0;
+  }
+
+  .cases-filter:not(.is-collapsed) .cases-filter__group:first-of-type {
+    margin-top: 0;
+  }
+
+  .cases-filter:not(.is-collapsed) .cases-filter__group legend {
+    margin-bottom: 4px;
+  }
+
+  .cases-filter:not(.is-collapsed) .cases-filter__check {
+    line-height: 1.25;
+  }
+}
+
+.cases-filter__mobile-clear {
+  display: none;
+}
+
+.cases-filter__chevron-button {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .cases-filter__mobile-clear {
+    display: inline-grid;
+  }
+
+  .cases-filter__chevron-button {
+    display: flex;
   }
 }
 </style>
