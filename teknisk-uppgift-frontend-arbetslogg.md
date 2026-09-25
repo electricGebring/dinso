@@ -25,6 +25,11 @@ Vad upptäckte jag när jag läste den befintliga applikationen?
 - Sökning och filtrering
 - Ärendedetaljer
 - Godkänna åtgärd
+- Visa lyckat resultat när ett ärende godkänns
+- Visa fel när en åtgärd misslyckas
+- SvenskeBanken visar ärendedetaljer på en egen route
+- PensionsBolaget visar ärendedetaljer i en modal
+- Samma ärendeinformation ska visas i modal och på detaljsida
 - Loading-, fel- och tomt läge
 - Kundspecifika skillnader
 - Responsivitet
@@ -44,6 +49,7 @@ Skriv kort efter varje större steg: vad du gjorde, vad du upptäckte och vilket
 | 25-09-2026 | Sätter mig in i hur de olika rollerna sätts, och börjar på en mer granulär lösning | Snårigt! |
 | 25-09-2026 11:12 | Skapade och testade de tre behörighetsfallen | Maja kan se och godkänna ärenden.<br>Linn kan se men inte godkänna ärenden.<br>Norah kan inte se ärenden.<br>Direkt URL till ärenden skyddas och skickar obehörig användare till företagsöversikten. |
 | 25-09-2026 | Implementerade filtrering och sökning i ärendevyn | Status- och förfallofilter kombineras med sökningen lokalt i frontend. |
+| 25-09-2026 | Gick igenom kundernas olika detaljflöden | PensionsBolaget behåller modal. SvenskeBanken ska få en egen ärendedetaljsida med route. Innehållet ska vara samma i båda flödena. |
 
 ## Viktiga beslut
 

@@ -11,6 +11,7 @@ export interface CaseDetails {
 const props = defineProps<{
   item: CaseDetails
   canApprove: boolean
+  error?: string
   labels: {
     eyebrow: string
     close: string
@@ -84,6 +85,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
         class="case-modal__readonly"
       >
         {{ labels.readOnly }}
+      </p>
+      <p v-if="error" class="case-modal__error" role="alert">
+        {{ error }}
       </p>
       <div class="case-modal__actions">
         <button class="button secondary" type="button" @click="emit('close')">
@@ -198,6 +202,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 .case-modal__readonly {
   color: var(--muted);
   font-size: 0.9rem;
+}
+.case-modal__error {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--error-border, var(--border));
+  border-radius: var(--radius-control);
+  background: var(--error-bg, var(--surface));
+  color: var(--error-ink, var(--ink));
+  line-height: 1.45;
 }
 .case-modal__actions {
   display: flex;

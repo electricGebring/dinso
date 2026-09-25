@@ -382,8 +382,9 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
       return t('Medarbetaren kunde inte registreras.')
     }
   }
-  const approveCase = async (item: Case): Promise<void> => {
-    if (!session.canApproveCases) return
+  const approveCase = async (item: Case): Promise<boolean> => {
+    if (!session.canApproveCases) return false
+    error.value = ''
     try {
       if (useApi) {
         const response = await fetch(companyRequest(`cases/${item.id}/approve`), {
@@ -398,8 +399,10 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
         item.status = t('Godkänd')
       }
       message.value = t('Ärendet har godkänts.')
+      return true
     } catch {
-      error.value = t('Medarbetaren kunde inte registreras.')
+      error.value = t('Ärendet kunde inte godkännas.')
+      return false
     }
   }
   const reset = (): void => {

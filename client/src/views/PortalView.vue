@@ -126,8 +126,9 @@ const selectCase = (name: string): void => {
   selectedCase.value = portal.cases.find((item) => item.name === name) ?? null
 }
 const approveSelectedCase = async (): Promise<void> => {
-  if (selectedCase.value) await portal.approveCase(selectedCase.value)
-  selectedCase.value = null
+  if (!selectedCase.value) return
+  const approved = await portal.approveCase(selectedCase.value)
+  if (approved) selectedCase.value = null
 }
 onMounted(() => {
   void (session.isCompany ? portal.loadCompanyData() : portal.loadFundAllocation())
@@ -248,6 +249,7 @@ const finishEmployee = async (draft: {
     v-if="selectedCase"
     :item="selectedCase"
     :can-approve="session.canApproveCases"
+    :error="portal.error"
     :labels="caseModalLabels"
     @close="selectedCase = null"
     @approve="approveSelectedCase"
