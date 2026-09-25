@@ -123,6 +123,7 @@ const navigate = (target: 'insurance' | 'cases'): void => {
   })
 }
 const selectCase = (name: string): void => {
+  portal.clearCaseError()
   selectedCase.value = portal.cases.find((item) => item.name === name) ?? null
 }
 const approveSelectedCase = async (): Promise<void> => {
@@ -249,7 +250,7 @@ const finishEmployee = async (draft: {
     v-if="selectedCase"
     :item="selectedCase"
     :can-approve="session.canApproveCases"
-    :error="portal.error"
+    :error="portal.caseError"
     :labels="caseModalLabels"
     @close="selectedCase = null"
     @approve="approveSelectedCase"

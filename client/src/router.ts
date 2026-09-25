@@ -1,6 +1,7 @@
 import { defineComponent } from 'vue'
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import PortalView from './views/PortalView.vue'
+import CaseDetailsView from './views/CaseDetailsView.vue'
 
 export type Page =
   | 'overview'
@@ -11,6 +12,7 @@ export type Page =
   | 'employees'
   | 'plans'
   | 'cases'
+  | 'case-details'
   | 'add-employee'
 export type PortalRoute = 'PRIVATE' | 'COMPANY' | 'SYSTEM'
 
@@ -85,6 +87,12 @@ const routes: RouteRecordRaw[] = [
     name: 'company-cases',
     component: PortalView,
     meta: { portal: 'COMPANY', page: 'cases' },
+  },
+  {
+    path: '/foretag/arenden/:caseId',
+    name: 'company-case-details',
+    component: CaseDetailsView,
+    meta: { portal: 'COMPANY', page: 'case-details' },
   },
   {
     path: '/foretag/dokument',

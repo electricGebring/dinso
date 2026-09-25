@@ -70,6 +70,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
   const endDate = ref('2026-10-01')
   const saving = ref(false)
   const error = ref('')
+  const caseError = ref('')
   const message = ref('')
   const companyPlans = ref<CompanyPlan[]>([])
   const cases = ref<Case[]>([
@@ -384,7 +385,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
   }
   const approveCase = async (item: Case): Promise<boolean> => {
     if (!session.canApproveCases) return false
-    error.value = ''
+    caseError.value = ''
     try {
       if (useApi) {
         const response = await fetch(companyRequest(`cases/${item.id}/approve`), {
@@ -401,9 +402,12 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
       message.value = t('Ärendet har godkänts.')
       return true
     } catch {
-      error.value = t('Ärendet kunde inte godkännas.')
+      caseError.value = t('Ärendet kunde inte godkännas.')
       return false
     }
+  }
+  const clearCaseError = (): void => {
+    caseError.value = ''
   }
   const reset = (): void => {
     allocation.value = 60
@@ -425,6 +429,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
     endDate,
     saving,
     error,
+    caseError,
     message,
     cases,
     plans,
@@ -441,6 +446,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
     saveEmployee,
     addEmployee,
     approveCase,
+    clearCaseError,
     reset,
   }
 })

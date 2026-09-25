@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-
-export interface CaseDetails {
-  name: string
-  status: string
-  value: string
-  detail: string
-}
+import CaseDetails from './CaseDetails.vue'
+import type { CaseDetailsItem } from './CaseDetails.vue'
 
 const props = defineProps<{
-  item: CaseDetails
+  item: CaseDetailsItem
   canApprove: boolean
   error?: string
   labels: {
@@ -49,59 +44,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
       :aria-labelledby="`case-title-${item.name}`"
       tabindex="-1"
     >
-      <div class="case-modal__header">
-        <div>
-          <p class="case-modal__eyebrow">{{ labels.eyebrow }}</p>
-          <h2 :id="`case-title-${item.name}`">{{ item.name }}</h2>
-        </div>
-        <button
-          class="icon-button"
-          type="button"
-          :aria-label="labels.close"
-          @click="emit('close')"
-        >
-          ×
-        </button>
-      </div>
-
-      <dl class="case-modal__summary">
-        <div>
-          <dt>{{ labels.status }}</dt>
-          <dd>{{ item.status }}</dd>
-        </div>
-        <div>
-          <dt>{{ labels.due }}</dt>
-          <dd>{{ item.value }}</dd>
-        </div>
-      </dl>
-
-      <div class="case-modal__details">
-        <h3>{{ labels.details }}</h3>
-        <p>{{ item.detail }}</p>
-      </div>
-
-      <p
-        v-if="!canApprove && item.status !== labels.approved"
-        class="case-modal__readonly"
-      >
-        {{ labels.readOnly }}
-      </p>
-      <p v-if="error" class="case-modal__error" role="alert">
-        {{ error }}
-      </p>
-      <div class="case-modal__actions">
-        <button class="button secondary" type="button" @click="emit('close')">
-          {{ labels.close }}
-        </button>
-        <button
-          v-if="canApprove && item.status !== labels.approved"
-          class="button"
-          type="button"
-          @click="emit('approve')"
-        >
-          {{ labels.approve }}
-        </button>
-      </div>
+      <CaseDetails
+        :item="item"
+        :can-approve="canApprove"
+        :error="error"
+        :labels="labels"
+        @close="emit('close')"
+        @approve="emit('approve')"
+      />
     </section>
   </div>
 </template>

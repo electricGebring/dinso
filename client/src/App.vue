@@ -219,7 +219,8 @@ watch(
     if (
       !portal ||
       !allowedPortals.includes(portal) ||
-      (route.name === 'company-cases' && !session.canViewCases) ||
+      (['company-cases', 'company-case-details'].includes(String(route.name)) &&
+        !session.canViewCases) ||
       (route.meta.roles &&
         !route.meta.roles.includes(profile.role) &&
         profile.role !== 'SYSTEM_ADMIN')

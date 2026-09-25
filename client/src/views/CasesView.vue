@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import customer from '@customer/config'
 import DataTable, { type DataTableColumn } from '../components/DataTable.vue'
 import EmptyState from '../components/EmptyState.vue'
 import PageHeader from '../components/PageHeader.vue'
@@ -13,10 +15,22 @@ const props = defineProps<{
   t: (source: string) => string
   statusTone: (status: string) => StatusTone
 }>()
+const router = useRouter()
 const emit = defineEmits<{ open: [item: Case] }>()
 const searchQuery = ref('')
 const selectedStatuses = ref<string[]>([])
 const selectedDueStatuses = ref<string[]>([])
+const openCase = (item: Case): void => {
+  if (customer.key === 'svenskebanken') {
+    void router.push({
+      name: 'company-case-details',
+      params: { caseId: item.id },
+    })
+    return
+  }
+
+  emit('open', item)
+}
 const dueDateSort = ref<'default' | 'desc' | 'asc'>('default')
 
 const dateKey = (date: Date): string => {
@@ -153,7 +167,7 @@ const columns = computed<DataTableColumn[]>(() => [
               <button
                 class="table-link"
                 type="button"
-                @click="emit('open', row as Case)"
+                @click="openCase(row as Case)"
               >
                 {{ t((row as Case).name) }}
               </button>
