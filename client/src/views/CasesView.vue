@@ -17,6 +17,7 @@ const emit = defineEmits<{ open: [item: Case] }>()
 const searchQuery = ref('')
 const selectedStatuses = ref<string[]>([])
 const selectedDueStatuses = ref<string[]>([])
+const dueDateSort = ref<'default' | 'desc' | 'asc'>('default')
 
 const dateKey = (date: Date): string => {
   const year = date.getFullYear()
@@ -52,7 +53,7 @@ const caseStatus = (status: string): string => {
 const filteredCases = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase()
 
-  return props.cases.filter((item) => {
+  const matchingCases = props.cases.filter((item) => {
     const itemDueStatus = dueStatus(item.dueOn)
 
     return (
@@ -62,7 +63,25 @@ const filteredCases = computed(() => {
         (itemDueStatus !== null && selectedDueStatuses.value.includes(itemDueStatus)))
     )
   })
+
+  if (dueDateSort.value === 'default') return matchingCases
+
+  return [...matchingCases].sort((left, right) => {
+    const leftDate = left.dueOn || '\uffff'
+    const rightDate = right.dueOn || '\uffff'
+    const comparison = leftDate.localeCompare(rightDate)
+    return dueDateSort.value === 'desc' ? -comparison : comparison
+  })
 })
+
+const cycleDueDateSort = (): void => {
+  dueDateSort.value =
+    dueDateSort.value === 'default'
+      ? 'desc'
+      : dueDateSort.value === 'desc'
+        ? 'asc'
+        : 'default'
+}
 
 const activeFilterCount = computed(
   () => selectedStatuses.value.length + selectedDueStatuses.value.length,
@@ -110,6 +129,26 @@ const columns = computed<DataTableColumn[]>(() => [
             :columns="columns"
             :rows="filteredCases"
           >
+            <template #header-value>
+              <button
+                class="cases-sort-button"
+                type="button"
+                :aria-label="t('Sortera efter förfallodatum')"
+                :aria-pressed="dueDateSort !== 'default'"
+                @click="cycleDueDateSort"
+              >
+                <svg
+                  class="cases-sort-icon"
+                  viewBox="0 0 16 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path v-if="dueDateSort !== 'asc'" d="M2 9 8 3l6 6" />
+                  <path v-if="dueDateSort !== 'desc'" d="m2 15 6 6 6-6" />
+                </svg>
+                <span>{{ t('Förfaller') }}</span>
+              </button>
+            </template>
             <template #cell-name="{ row }">
               <button
                 class="table-link"
@@ -269,6 +308,33 @@ const columns = computed<DataTableColumn[]>(() => [
   outline: 3px solid color-mix(in srgb, var(--primary) 24%, transparent);
   outline-offset: 2px;
   border-color: var(--primary);
+}
+
+.cases-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cases-sort-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  outline-offset: 3px;
+}
+
+.cases-sort-icon {
+  width: 12px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .cases-layout {
