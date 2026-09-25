@@ -5,7 +5,7 @@ import EmptyState from '../components/EmptyState.vue'
 import PageHeader from '../components/PageHeader.vue'
 import Panel from '../components/Panel.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-type Case = { id: string; name: string; status: string; value: string; detail: string }
+type Case = { id: string; name: string; status: string; value: string; dueOn: string; detail: string }
 type StatusTone = 'positive' | 'pending' | 'attention' | 'neutral'
 const props = defineProps<{
   title: string
@@ -15,14 +15,76 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ open: [item: Case] }>()
 const searchQuery = ref('')
+const selectedStatuses = ref<string[]>([])
+const selectedDueStatuses = ref<string[]>([])
+
+const dateKey = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const dueStatus = (dueOn?: string | null): 'overdue' | 'soon' | 'later' | null => {
+  if (typeof dueOn !== 'string') return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const soonLimit = new Date(today)
+  soonLimit.setDate(today.getDate() + 13)
+  const dueDateKey = dueOn.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDateKey)) return null
+
+  if (dueDateKey < dateKey(today)) return 'overdue'
+  if (dueDateKey <= dateKey(soonLimit)) return 'soon'
+  return 'later'
+}
+
+const caseStatus = (status: string): string => {
+  const normalized = status.toLocaleLowerCase()
+  if (['pending', 'att granska', 'väntar'].includes(normalized)) return 'PENDING'
+  if (['ongoing', 'pågående'].includes(normalized)) return 'ONGOING'
+  if (['completed', 'complete', 'komplett', 'genomförd'].includes(normalized)) return 'COMPLETED'
+  if (['approved', 'godkänd'].includes(normalized)) return 'APPROVED'
+  return status
+}
 
 const filteredCases = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase()
-  if (!query) return props.cases
 
-  return props.cases.filter((item) =>
-    `${item.name} ${item.detail}`.toLocaleLowerCase().includes(query),
-  )
+  return props.cases.filter((item) => {
+    const itemDueStatus = dueStatus(item.dueOn)
+
+    return (
+      (!query || `${item.name} ${item.detail}`.toLocaleLowerCase().includes(query)) &&
+      (selectedStatuses.value.length === 0 || selectedStatuses.value.includes(caseStatus(item.status))) &&
+      (selectedDueStatuses.value.length === 0 ||
+        (itemDueStatus !== null && selectedDueStatuses.value.includes(itemDueStatus)))
+    )
+  })
+})
+
+const activeFilterCount = computed(
+  () => selectedStatuses.value.length + selectedDueStatuses.value.length,
+)
+
+const statusOptions = computed(() => {
+  const defaults = [
+    { value: 'PENDING', label: 'PENDING' },
+    { value: 'ONGOING', label: 'ONGOING' },
+    { value: 'COMPLETED', label: 'COMPLETED' },
+    { value: 'APPROVED', label: 'APPROVED' },
+  ]
+
+  return defaults.map((option) => {
+    const matchingCase = props.cases.find(
+      (item) => caseStatus(item.status) === option.value,
+    )
+    return {
+      value: option.value,
+      label: matchingCase ? props.t(matchingCase.status) : props.t(option.label),
+    }
+  })
 })
 
 const columns = computed<DataTableColumn[]>(() => [
@@ -66,9 +128,9 @@ const columns = computed<DataTableColumn[]>(() => [
           </DataTable>
           <EmptyState
             v-else
-            :title="searchQuery ? t('Inga träffar') : t('Inga ärenden')"
+            :title="searchQuery.trim() || activeFilterCount > 0 ? t('Inga träffar') : t('Inga ärenden')"
             :description="
-              searchQuery
+              searchQuery.trim() || activeFilterCount > 0
                 ? t('Prova ett annat sökord.')
                 : t('Det finns inga ärenden att visa just nu.')
             "
@@ -103,8 +165,22 @@ const columns = computed<DataTableColumn[]>(() => [
         <Panel title="Filter">
           <div class="cases-filter">
           <div class="cases-filter__heading">
-            <span>{{ t('3 filter används') }}</span>
-            <button class="cases-filter__clear" type="button">
+            <span>{{ activeFilterCount }} {{ t(activeFilterCount === 1 ? 'filter används' : 'filter används') }}</span>
+            <button
+              class="cases-filter__clear"
+              type="button"
+              :disabled="activeFilterCount === 0"
+              @click="selectedStatuses = []; selectedDueStatuses = []"
+            >
+              <svg
+                class="cases-filter__clear-icon"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M13 5a5 5 0 1 0 1 3" />
+                <path d="M13 1v4H9" />
+              </svg>
               {{ t('Rensa filter') }}
             </button>
           </div>
@@ -112,32 +188,28 @@ const columns = computed<DataTableColumn[]>(() => [
           <fieldset class="cases-filter__group">
             <legend>{{ t('Förfallostatus') }}</legend>
             <label class="cases-filter__check">
-              <input type="checkbox" />
-              <span>{{ t('Förfaller') }}</span>
+              <input v-model="selectedDueStatuses" type="checkbox" value="overdue" />
+              <span>{{ t('Förfallen') }}</span>
             </label>
             <label class="cases-filter__check">
-              <input type="checkbox" />
+              <input v-model="selectedDueStatuses" type="checkbox" value="soon" />
               <span>{{ t('Förfaller snart') }}</span>
             </label>
           </fieldset>
 
           <fieldset class="cases-filter__group">
             <legend>{{ t('Ärendestatus') }}</legend>
-            <label class="cases-filter__check">
-              <input type="checkbox" />
-              <span>{{ t('Godkänd') }}</span>
-            </label>
-            <label class="cases-filter__check">
-              <input type="checkbox" />
-              <span>{{ t('Genomförd') }}</span>
-            </label>
-            <label class="cases-filter__check">
-              <input type="checkbox" />
-              <span>{{ t('Pågående') }}</span>
-            </label>
-            <label class="cases-filter__check">
-              <input type="checkbox" />
-              <span>{{ t('Väntar') }}</span>
+            <label
+              v-for="option in statusOptions"
+              :key="option.value"
+              class="cases-filter__check"
+            >
+              <input
+                v-model="selectedStatuses"
+                type="checkbox"
+                :value="option.value"
+              />
+              <span>{{ option.label }}</span>
             </label>
           </fieldset>
           </div>
@@ -212,7 +284,7 @@ const columns = computed<DataTableColumn[]>(() => [
 
 .cases-filter {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .cases-filter__heading {
@@ -227,12 +299,32 @@ const columns = computed<DataTableColumn[]>(() => [
 }
 
 .cases-filter__clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--primary);
   font: inherit;
   cursor: pointer;
+}
+
+.cases-filter__clear-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.cases-filter__clear:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.6;
 }
 
 .cases-filter__check,
@@ -254,13 +346,13 @@ const columns = computed<DataTableColumn[]>(() => [
 .cases-filter__group {
   display: grid;
   gap: 6px;
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   padding: 0;
   border: 0;
 }
 
 .cases-filter__group legend {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--ink);
   font-size: 0.95rem;
   font-weight: 700;

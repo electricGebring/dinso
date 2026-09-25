@@ -29,6 +29,7 @@ const selectedCase = ref<{
   name: string
   status: string
   value: string
+  dueOn: string
   detail: string
 } | null>(null)
 const isCompany = computed(() => session.isCompany)

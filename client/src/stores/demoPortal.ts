@@ -16,6 +16,7 @@ type Case = {
   name: string
   status: string
   value: string
+  dueOn: string
   detail: string
 }
 type Row = {
@@ -77,6 +78,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
       name: 'Löneändring · Mio Sten',
       status: 'Att granska',
       value: '18 sep.',
+      dueOn: '2026-09-18',
       detail:
         'Mios månadslön har registrerats som 52 000 kr. Kontrollera uppgifterna och godkänn ändringen.',
     },
@@ -85,6 +87,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
       name: 'Tjänstledighet · Nora Holst',
       status: 'Pågående',
       value: '30 sep.',
+      dueOn: '2026-09-30',
       detail:
         'Begäran om tjänstledighet från 1 oktober till 30 november väntar på handläggning.',
     },
@@ -93,6 +96,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
       name: 'Nyanslutning · Ivar Holm',
       status: 'Komplett',
       value: '20 sep.',
+      dueOn: '2026-09-20',
       detail: 'Anslutningen är komplett och redo för nästa premieflöde.',
     },
   ])
@@ -198,6 +202,7 @@ export const useDemoPortalStore = defineStore('demo-portal', () => {
     name: item.name,
     status: item.status,
     value: item.dueOn,
+    dueOn: item.dueOn,
     detail: item.detail,
   })
 
