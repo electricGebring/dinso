@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import DataTable, { type DataTableColumn } from '../components/DataTable.vue'
+import EmptyState from '../components/EmptyState.vue'
 import PageHeader from '../components/PageHeader.vue'
 import Panel from '../components/Panel.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-type Case = { id: string; name: string; status: string; value: string }
+type Case = { id: string; name: string; status: string; value: string; detail: string }
 type StatusTone = 'positive' | 'pending' | 'attention' | 'neutral'
 const props = defineProps<{
   title: string
@@ -13,6 +14,16 @@ const props = defineProps<{
   statusTone: (status: string) => StatusTone
 }>()
 const emit = defineEmits<{ open: [item: Case] }>()
+const searchQuery = ref('')
+
+const filteredCases = computed(() => {
+  const query = searchQuery.value.trim().toLocaleLowerCase()
+  if (!query) return props.cases
+
+  return props.cases.filter((item) =>
+    `${item.name} ${item.detail}`.toLocaleLowerCase().includes(query),
+  )
+})
 
 const columns = computed<DataTableColumn[]>(() => [
   { key: 'name', label: props.t('Ärende') },
@@ -30,38 +41,61 @@ const columns = computed<DataTableColumn[]>(() => [
       "
     />
     <div class="cases-layout">
-      <Panel>
-        <DataTable
-          :columns="columns"
-          :rows="cases"
-        >
-          <template #cell-name="{ row }">
-            <button
-              class="table-link"
-              type="button"
-              @click="emit('open', row as Case)"
-            >
-              {{ t((row as Case).name) }}
-            </button>
-          </template>
-          <template #cell-status="{ row }">
-            <StatusBadge
-              :label="t((row as Case).status)"
-              :tone="statusTone((row as Case).status)"
-            />
-          </template>
-        </DataTable>
-      </Panel>
+      <div>
+        <Panel>
+          <DataTable
+            v-if="filteredCases.length > 0"
+            :columns="columns"
+            :rows="filteredCases"
+          >
+            <template #cell-name="{ row }">
+              <button
+                class="table-link"
+                type="button"
+                @click="emit('open', row as Case)"
+              >
+                {{ t((row as Case).name) }}
+              </button>
+            </template>
+            <template #cell-status="{ row }">
+              <StatusBadge
+                :label="t((row as Case).status)"
+                :tone="statusTone((row as Case).status)"
+              />
+            </template>
+          </DataTable>
+          <EmptyState
+            v-else
+            :title="searchQuery ? t('Inga träffar') : t('Inga ärenden')"
+            :description="
+              searchQuery
+                ? t('Prova ett annat sökord.')
+                : t('Det finns inga ärenden att visa just nu.')
+            "
+          />
+        </Panel>
+      </div>
 
       <div class="cases-sidebar">
         <div class="cases-search">
-          <label class="cases-search__label" for="case-search">
-            {{ t('Sök ärenden') }}
-          </label>
+          <div class="cases-search__header">
+            <label class="cases-search__label" for="case-search">
+              {{ t('Sök ärenden') }}
+            </label>
+            <span
+              v-if="searchQuery.trim()"
+              class="cases-search__count"
+              aria-live="polite"
+            >
+              {{ filteredCases.length }}
+              {{ t(filteredCases.length === 1 ? 'träff' : 'träffar') }}
+            </span>
+          </div>
           <input
             id="case-search"
             class="cases-search__input"
             type="search"
+            v-model="searchQuery"
             :placeholder="t('Sök på ärende eller person')"
           />
         </div>
@@ -118,18 +152,28 @@ const columns = computed<DataTableColumn[]>(() => [
 }
 
 .cases-search {
-  position: relative;
   width: 100%;
   margin-bottom: 24px;
 }
 
+.cases-search__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .cases-search__label {
   display: block;
-  position: absolute;
-  bottom: calc(100% + 8px);
   color: var(--ink);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.cases-search__count {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .cases-search__input {
